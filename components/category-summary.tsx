@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getExpenses } from "@/lib/api";
 
 type Expense = {
   id: string;
@@ -28,31 +29,32 @@ export function CategorySummary({ refreshKey = 0 }: CategorySummaryProps) {
 
   useEffect(() => {
     let isMounted = true;
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      abortController.abort();
+    }, 15000);
 
     async function loadExpenses() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/expenses?sort=date_desc", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          const message =
-            data && typeof data === "object" && "error" in data
-              ? String(data.error)
-              : `Request failed with status ${response.status}`;
-          throw new Error(message);
-        }
+        const data = await getExpenses<Expense[]>(
+          { sort: "date_desc" },
+          { signal: abortController.signal }
+        );
 
         if (!isMounted) return;
         setExpenses(Array.isArray(data) ? (data as Expense[]) : []);
       } catch (loadError) {
         if (!isMounted) return;
+        if (
+          loadError instanceof Error &&
+          loadError.name === "AbortError"
+        ) {
+          setError("Request timed out on a slow network.");
+          setExpenses([]);
+          return;
+        }
         setError(
           loadError instanceof Error
             ? loadError.message
@@ -60,6 +62,7 @@ export function CategorySummary({ refreshKey = 0 }: CategorySummaryProps) {
         );
         setExpenses([]);
       } finally {
+        clearTimeout(timeoutId);
         if (isMounted) {
           setIsLoading(false);
         }
@@ -70,6 +73,8 @@ export function CategorySummary({ refreshKey = 0 }: CategorySummaryProps) {
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
+      abortController.abort();
     };
   }, [refreshKey]);
 

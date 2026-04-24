@@ -31,9 +31,16 @@ export async function GET(request: Request) {
     const expenses = await Expense.find(query).sort(sortOptions).lean();
 
     return NextResponse.json(expenses, { status: 200 });
-  } catch {
+  } catch (error) {
+    console.error("GET /api/expenses failed:", error);
     return NextResponse.json(
-      { error: "Failed to fetch expenses" },
+      {
+        error: "Failed to fetch expenses",
+        ...(process.env.NODE_ENV !== "production" &&
+        error instanceof Error
+          ? { detail: error.message }
+          : {}),
+      },
       { status: 500 }
     );
   }
@@ -76,6 +83,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(createdExpense.toObject(), { status: 201 });
   } catch (error) {
+    console.error("POST /api/expenses failed:", error);
     // Handle duplicate-key races for idempotent requests.
     if (
       error instanceof mongoose.Error &&
@@ -99,7 +107,13 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: "Failed to create expense" },
+      {
+        error: "Failed to create expense",
+        ...(process.env.NODE_ENV !== "production" &&
+        error instanceof Error
+          ? { detail: error.message }
+          : {}),
+      },
       { status: 500 }
     );
   }

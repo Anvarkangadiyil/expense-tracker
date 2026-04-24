@@ -18,7 +18,9 @@ if (!cached) {
 }
 
 export async function connectDB() {
-  if (cached.conn) return cached.conn
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn
+  }
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(
@@ -29,7 +31,14 @@ export async function connectDB() {
     )
   }
 
-  cached.conn = await cached.promise
+  try {
+    cached.conn = await cached.promise
+  } catch (error) {
+    // Reset cache on failure so future requests can retry cleanly.
+    cached.promise = null
+    cached.conn = null
+    throw error
+  }
 
   return cached.conn
 }

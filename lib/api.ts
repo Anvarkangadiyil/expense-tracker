@@ -17,12 +17,13 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const { headers, ...restOptions } = options;
   const response = await fetch(endpoint, {
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers ?? {}),
+      ...(headers ?? {}),
     },
-    ...options,
+    ...restOptions,
   });
 
   const data = await response.json().catch(() => null);
@@ -62,10 +63,12 @@ export async function createExpense<T = unknown>(
 }
 
 export async function getExpenses<T = unknown>(
-  params?: GetExpensesParams
+  params?: GetExpensesParams,
+  options?: RequestInit
 ): Promise<T> {
   const queryString = buildQueryString(params);
   return apiRequest<T>(`/api/expenses${queryString}`, {
     method: "GET",
+    ...options,
   });
 }

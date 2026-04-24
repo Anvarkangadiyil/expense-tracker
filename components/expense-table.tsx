@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getExpenses } from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -72,35 +73,24 @@ export function ExpenseTable({
       setIsLoading(true);
       setError(null);
       try {
-        const query = new URLSearchParams();
-        if (selectedCategory !== "all") {
-          query.set("category", selectedCategory);
-        }
-        query.set("sort", "date_desc");
-
-        const response = await fetch(`/api/expenses?${query.toString()}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
+        const data = await getExpenses<Expense[]>(
+          {
+            category: selectedCategory === "all" ? undefined : selectedCategory,
+            sort: "date_desc",
           },
+          {
           signal: abortController.signal,
-        });
-
-        const data = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          const message =
-            data && typeof data === "object" && "error" in data
-              ? String(data.error)
-              : `Request failed with status ${response.status}`;
-          throw new Error(message);
-        }
+          }
+        );
 
         if (!isActive) return;
         setExpenses(Array.isArray(data) ? data : []);
       } catch (loadError) {
         if (!isActive) return;
-        if (loadError instanceof DOMException && loadError.name === "AbortError") {
+        if (
+          loadError instanceof Error &&
+          loadError.name === "AbortError"
+        ) {
           setError("Request timed out on a slow network. Please retry.");
           setExpenses([]);
           return;
