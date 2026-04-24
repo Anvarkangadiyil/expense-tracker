@@ -466,19 +466,6 @@ Users receive:
 
 ---
 
-# 📷 Screenshots
-
-(Add screenshots after UI is complete)
-
-Example:
-
-```text
-public/screenshots/dashboard.png
-public/screenshots/form.png
-```
-
----
-
 # 🌐 Deployment
 
 Recommended deployment:
@@ -516,10 +503,4 @@ Update environment variables in Vercel.
 Full Stack Developer
 Next.js | MongoDB | TypeScript
 
----
 
-# 📄 License
-
-MIT License
-
----
