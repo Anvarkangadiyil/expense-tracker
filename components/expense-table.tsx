@@ -149,7 +149,7 @@ export function ExpenseTable({
         </select>
       </div>
 
-      <p className="text-sm font-medium text-foreground">
+      <p className="text-sm font-medium text-foreground border p-2">
         Total: {formatAmount(totalVisibleAmount)}
       </p>
 
@@ -182,7 +182,7 @@ export function ExpenseTable({
           No expenses found.
         </div>
       ) : (
-        <Table>
+        <Table aria-label="Expense table" className ="border" >
           <TableHeader>
             <TableRow>
               <TableHead className="w-[140px]">Amount</TableHead>

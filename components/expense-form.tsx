@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import { createExpense } from "@/lib/api";
+import { Button } from "./ui/button";
 
 type ExpenseFormValues = {
   amount: string;
@@ -88,12 +89,19 @@ export function ExpenseForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 rounded-lg border bg-card p-6 text-card-foreground shadow-sm"
-    >
-      <div className="space-y-2">
-        <label htmlFor="amount" className="text-sm font-medium leading-none">
+    <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold">Add Expense</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Track your spending by adding a new expense entry.
+        </p>
+      </div>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+      >
+        <div className="space-y-2">
+          <label htmlFor="amount" className="text-sm font-medium leading-none">
           Amount
         </label>
         <input
@@ -186,13 +194,16 @@ export function ExpenseForm({
         </p>
       ) : null}
 
-      <button
+      <Button
         type="submit"
         disabled={isSubmitDisabled}
-        className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        className="w-full"
+        variant="destructive"
+
       >
         {isSubmitting ? "Saving..." : "Add Expense"}
-      </button>
-    </form>
+      </Button>
+      </form>
+    </div>
   );
 }

@@ -2,6 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getExpenses } from "@/lib/api";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 type Expense = {
   id: string;
@@ -116,21 +124,24 @@ export function CategorySummary({ refreshKey = 0 }: CategorySummaryProps) {
       {summary.length === 0 ? (
         <p className="text-sm text-muted-foreground">No expenses available.</p>
       ) : (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 border-b pb-2 text-sm font-medium text-muted-foreground">
-            <span>Category</span>
-            <span className="text-right">Total</span>
-          </div>
-          {summary.map((item) => (
-            <div
-              key={item.category}
-              className="grid grid-cols-2 border-b pb-2 text-sm last:border-none"
-            >
-              <span>{item.category}</span>
-              <span className="text-right font-medium">{formatInr(item.total)}</span>
-            </div>
-          ))}
-        </div>
+        <Table className="border">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {summary.map((item) => (
+              <TableRow key={item.category}>
+                <TableCell>{item.category}</TableCell>
+                <TableCell className="text-right font-medium">
+                  {formatInr(item.total)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </section>
   );
