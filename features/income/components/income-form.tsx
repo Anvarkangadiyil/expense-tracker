@@ -35,6 +35,7 @@ interface IncomeFormProps {
   };
   onSuccess?: () => void;
   onCancel?: () => void;
+  currencySymbol?: string;
 }
 
 export function IncomeForm({
@@ -43,6 +44,7 @@ export function IncomeForm({
   income,
   onSuccess,
   onCancel,
+  currencySymbol = "$",
 }: IncomeFormProps) {
   const isEditing = !!income;
 
@@ -109,7 +111,7 @@ export function IncomeForm({
             Amount <span className="text-destructive">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint font-medium">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint font-medium">{currencySymbol}</span>
             <input
               {...register("amount")}
               id="amount"

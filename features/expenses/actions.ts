@@ -8,6 +8,7 @@ import Expense from "@/models/Expense";
 import Client from "@/models/Client";
 import Project from "@/models/Project";
 import { uploadReceipt } from "@/services/cloudinary";
+import { suggestExpenseCategory } from "@/services/openai";
 import { expenseFormSchema, type ExpenseFormValues } from "./schemas";
 
 async function getSessionUserOrThrow() {
@@ -235,6 +236,24 @@ export async function uploadReceiptAction(formData: FormData) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to upload receipt.",
+    };
+  }
+}
+
+/**
+ * Suggests an expense category using AI based on description.
+ */
+export async function suggestCategoryAction(description: string) {
+  try {
+    await getSessionUserOrThrow();
+    const category = await suggestExpenseCategory(description);
+    return { success: true, category };
+  } catch (error: unknown) {
+    console.error("suggestCategoryAction error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to suggest category.",
+      category: "other",
     };
   }
 }

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import { expenseFormSchema, type ExpenseFormValues } from "../schemas";
-import { createExpense, updateExpense, uploadReceiptAction } from "../actions";
+import { createExpense, updateExpense, uploadReceiptAction, suggestCategoryAction } from "../actions";
 import { Button } from "@/components/ui/button";
 
 interface ClientOption {
@@ -37,6 +37,7 @@ interface ExpenseFormProps {
   };
   onSuccess?: () => void;
   onCancel?: () => void;
+  currencySymbol?: string;
 }
 
 const CATEGORIES = [
@@ -53,11 +54,13 @@ export function ExpenseForm({
   expense,
   onSuccess,
   onCancel,
+  currencySymbol = "$",
 }: ExpenseFormProps) {
   const isEditing = !!expense;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string>(expense?.receiptUrl ?? "");
   const [isUploading, setIsUploading] = useState(false);
+  const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
 
   // Normalize initial client/project ID strings
   const initialClientId = typeof expense?.clientId === "object" ? expense.clientId._id : (expense?.clientId ?? "");
@@ -82,6 +85,8 @@ export function ExpenseForm({
       notes: expense?.notes ?? "",
     },
   });
+
+  const { onBlur: onDescriptionBlur, ...descriptionRegister } = register("description");
 
   const watchedClientId = watch("clientId");
 
@@ -169,7 +174,7 @@ export function ExpenseForm({
             Amount <span className="text-destructive">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint font-medium">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint font-medium">{currencySymbol}</span>
             <input
               {...register("amount")}
               id="amount"
@@ -203,8 +208,14 @@ export function ExpenseForm({
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Category Field */}
         <div className="space-y-1.5">
-          <label htmlFor="category" className="text-sm font-medium leading-none text-ink-secondary">
-            Category <span className="text-destructive">*</span>
+          <label htmlFor="category" className="text-sm font-medium leading-none text-ink-secondary flex items-center justify-between">
+            <span>Category <span className="text-destructive">*</span></span>
+            {isSuggestingCategory && (
+              <span className="text-3xs text-primary font-medium flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                AI categorizing...
+              </span>
+            )}
           </label>
           <select
             {...register("category")}
@@ -227,10 +238,28 @@ export function ExpenseForm({
             Description / Vendor <span className="text-destructive">*</span>
           </label>
           <input
-            {...register("description")}
+            {...descriptionRegister}
+            onBlur={async (e) => {
+              // Call react-hook-form's blur handler
+              onDescriptionBlur(e);
+              const value = e.target.value;
+              if (value && value.trim().length > 2 && !isEditing) {
+                setIsSuggestingCategory(true);
+                try {
+                  const res = await suggestCategoryAction(value);
+                  if (res.success && res.category) {
+                    setValue("category", res.category as any);
+                  }
+                } catch (err) {
+                  console.error("AI categorization suggestion failed:", err);
+                } finally {
+                  setIsSuggestingCategory(false);
+                }
+              }
+            }}
             id="description"
             type="text"
-            disabled={isSubmitting || isUploading}
+            disabled={isSubmitting || isUploading || isSuggestingCategory}
             className="flex h-10 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm placeholder:text-ink-faint focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary disabled:opacity-50"
             placeholder="e.g. GitHub Copilot, Uber taxi"
           />

@@ -5,6 +5,7 @@ export interface IUser {
   email: string;
   password?: string;
   image?: string;
+  currencySymbol?: string;
   isDeleted?: boolean;
   deletedAt?: Date;
   createdAt?: Date;
@@ -32,6 +33,11 @@ const userSchema = new Schema<IUser>(
     image: {
       type: String,
       required: false,
+    },
+    currencySymbol: {
+      type: String,
+      default: "$",
+      required: true,
     },
     isDeleted: {
       type: Boolean,

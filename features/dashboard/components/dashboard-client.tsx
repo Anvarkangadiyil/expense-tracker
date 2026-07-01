@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   TrendingUp,
   TrendingDown,
@@ -62,6 +63,8 @@ interface DashboardClientProps {
   initialExpenses: any[];
   clients: ClientOption[];
   projects: ProjectOption[];
+  hasInvoices?: boolean;
+  currencySymbol?: string;
 }
 
 export function DashboardClient({
@@ -69,6 +72,8 @@ export function DashboardClient({
   initialExpenses,
   clients,
   projects,
+  hasInvoices = false,
+  currencySymbol = "$",
 }: DashboardClientProps) {
   const router = useRouter();
   
@@ -251,6 +256,9 @@ export function DashboardClient({
     }
   };
 
+  const hasClients = clients.length > 0;
+  const hasTransactions = allTransactions.length > 0;
+
   return (
     <div className="space-y-6">
       {/* Page Title */}
@@ -261,6 +269,77 @@ export function DashboardClient({
         </p>
       </div>
 
+      {/* Onboarding Checklist */}
+      {!hasClients || !hasTransactions || !hasInvoices ? (
+        <div className="rounded-lg border border-hairline bg-surface p-5 shadow-elevation-1 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-ink">Getting Started Checklist</h2>
+            <p className="text-3xs text-ink-muted mt-0.5 font-medium">Follow these simple steps to set up your account and track your freelance business.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 text-xs">
+            {/* Step 1: Add a Client */}
+            <div className={`flex items-start gap-2.5 p-3 rounded border ${hasClients ? "bg-success-bg/10 border-success/15 text-success" : "bg-canvas-soft border-hairline"}`}>
+              <input
+                type="checkbox"
+                checked={hasClients}
+                readOnly
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary pointer-events-none mt-0.5"
+              />
+              <div>
+                <span className="font-semibold block">1. Add a Client</span>
+                {hasClients ? (
+                  <span className="text-3xs block mt-0.5">Completed!</span>
+                ) : (
+                  <Link href="/clients" className="text-3xs text-primary hover:underline block mt-0.5 font-semibold">
+                    Go to Clients page &rarr;
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Step 2: Log a Transaction */}
+            <div className={`flex items-start gap-2.5 p-3 rounded border ${hasTransactions ? "bg-success-bg/10 border-success/15 text-success" : "bg-canvas-soft border-hairline"}`}>
+              <input
+                type="checkbox"
+                checked={hasTransactions}
+                readOnly
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary pointer-events-none mt-0.5"
+              />
+              <div>
+                <span className="font-semibold block">2. Log a Transaction</span>
+                {hasTransactions ? (
+                  <span className="text-3xs block mt-0.5">Completed!</span>
+                ) : (
+                  <span className="text-3xs text-ink-muted block mt-0.5 font-medium">
+                    Use the Quick Add form below
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Step 3: Create an Invoice */}
+            <div className={`flex items-start gap-2.5 p-3 rounded border ${hasInvoices ? "bg-success-bg/10 border-success/15 text-success" : "bg-canvas-soft border-hairline"}`}>
+              <input
+                type="checkbox"
+                checked={hasInvoices}
+                readOnly
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary pointer-events-none mt-0.5"
+              />
+              <div>
+                <span className="font-semibold block">3. Create an Invoice</span>
+                {hasInvoices ? (
+                  <span className="text-3xs block mt-0.5">Completed!</span>
+                ) : (
+                  <Link href="/invoices/create" className="text-3xs text-primary hover:underline block mt-0.5 font-semibold">
+                    Go to Invoice builder &rarr;
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Metrics Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         {/* Income Card */}
@@ -270,7 +349,7 @@ export function DashboardClient({
             <TrendingUp className="h-4 w-4 text-success" />
           </div>
           <div className="mt-2 text-2xl font-bold text-ink">
-            ${stats.income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {currencySymbol}{stats.income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
 
@@ -281,7 +360,7 @@ export function DashboardClient({
             <TrendingDown className="h-4 w-4 text-warning" />
           </div>
           <div className="mt-2 text-2xl font-bold text-ink">
-            ${stats.expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {currencySymbol}{stats.expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
 
@@ -297,7 +376,7 @@ export function DashboardClient({
             }`}
           >
             {stats.net < 0 && "-"}
-            ${Math.abs(stats.net).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {currencySymbol}{Math.abs(stats.net).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
       </div>
@@ -371,6 +450,7 @@ export function DashboardClient({
               <ExpenseForm
                 clients={clients}
                 projects={projects}
+                currencySymbol={currencySymbol}
                 onSuccess={() => {
                   router.refresh();
                 }}
@@ -379,6 +459,7 @@ export function DashboardClient({
               <IncomeForm
                 clients={clients}
                 projects={projects}
+                currencySymbol={currencySymbol}
                 onSuccess={() => {
                   router.refresh();
                 }}
@@ -522,7 +603,7 @@ export function DashboardClient({
                         tx.type === "income" ? "text-success" : "text-ink"
                       }`}
                     >
-                      {tx.type === "income" ? "+" : "-"}${tx.amount.toFixed(2)}
+                      {tx.type === "income" ? "+" : "-"}{currencySymbol}{tx.amount.toFixed(2)}
                     </td>
 
                     {/* Actions */}
@@ -579,6 +660,7 @@ export function DashboardClient({
               clients={clients}
               projects={projects}
               expense={editingExpense}
+              currencySymbol={currencySymbol}
               onSuccess={() => {
                 setEditingExpense(null);
                 router.refresh();
@@ -601,6 +683,7 @@ export function DashboardClient({
               clients={clients}
               projects={projects}
               income={editingIncome}
+              currencySymbol={currencySymbol}
               onSuccess={() => {
                 setEditingIncome(null);
                 router.refresh();

@@ -4,8 +4,9 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { registerSchema, RegisterInput, loginSchema, LoginInput } from "./schemas";
-import { signIn } from "@/auth";
+import { signIn, auth } from "@/auth";
 import { AuthError } from "next-auth";
+import { revalidatePath } from "next/cache";
 
 /**
  * Registers a new user in the database.
@@ -77,5 +78,114 @@ export async function loginUser(values: LoginInput) {
     }
     // NextAuth redirects by throwing a special error; we must rethrow it for the redirect to function.
     throw error;
+  }
+}
+
+/**
+ * Checks if the user is authenticated and returns their userId.
+ */
+async function getSessionUserOrThrow() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized. Please log in.");
+  }
+  return session.user.id;
+}
+
+/**
+ * Fetches user settings (name, email, currencySymbol).
+ */
+export async function getUserSettings() {
+  try {
+    const userId = await getSessionUserOrThrow();
+    await connectDB();
+
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      return { success: false, error: "User not found." };
+    }
+
+    return {
+      success: true,
+      data: {
+        name: user.name,
+        email: user.email,
+        currencySymbol: user.currencySymbol || "$",
+      },
+    };
+  } catch (error: unknown) {
+    console.error("getUserSettings error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch settings.",
+    };
+  }
+}
+
+/**
+ * Updates user settings (name, currencySymbol).
+ */
+export async function updateUserSettings(name: string, currencySymbol: string) {
+  try {
+    const userId = await getSessionUserOrThrow();
+    if (!name || name.trim() === "") {
+      return { success: false, error: "Name is required." };
+    }
+    if (!currencySymbol || currencySymbol.trim() === "") {
+      return { success: false, error: "Currency symbol is required." };
+    }
+
+    await connectDB();
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: { name, currencySymbol } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return { success: false, error: "User not found." };
+    }
+
+    revalidatePath("/");
+    revalidatePath("/invoices");
+    revalidatePath("/clients");
+    revalidatePath("/settings");
+
+    return { success: true, message: "Settings updated successfully." };
+  } catch (error: unknown) {
+    console.error("updateUserSettings error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update settings.",
+    };
+  }
+}
+
+/**
+ * Soft deletes user account.
+ */
+export async function deleteUserAccount() {
+  try {
+    const userId = await getSessionUserOrThrow();
+    await connectDB();
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { isDeleted: true, deletedAt: new Date() } },
+      { new: true }
+    );
+
+    if (!user) {
+      return { success: false, error: "User not found." };
+    }
+
+    return { success: true, message: "Account deleted successfully." };
+  } catch (error: unknown) {
+    console.error("deleteUserAccount error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete account.",
+    };
   }
 }

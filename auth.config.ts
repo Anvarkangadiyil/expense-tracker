@@ -11,6 +11,7 @@ export const authConfig: NextAuthConfig = {
         nextUrl.pathname === "/login" || nextUrl.pathname === "/register";
       const isPublicRoute =
         nextUrl.pathname.startsWith("/api/auth") ||
+        nextUrl.pathname.startsWith("/invoices/shared/") ||
         nextUrl.pathname === "/favicon.ico";
 
       if (isPublicRoute) {
