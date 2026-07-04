@@ -20,37 +20,34 @@ cloudinary.config({
 export default cloudinary;
 
 export async function uploadReceipt(file: File): Promise<string> {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
- 
-
- if (cloudName) {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const result = await new Promise<any>((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            folder: "receipts",
-          },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-          }
-        )
-        .end(buffer);
-    });
-
-    return result.secure_url;
-  } catch (error) {
-    console.warn("Cloudinary upload failed, using local storage:", error);
-  }
-}
-  // Local storage fallback:
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+
+  if (cloudName) {
+    try {
+      const result = await new Promise<any>((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            {
+              folder: "receipts",
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          )
+          .end(buffer);
+      });
+
+      return result.secure_url;
+    } catch (error) {
+      console.warn("Cloudinary upload failed, using local storage fallback:", error);
+    }
+  }
+
+  // Local storage fallback:
   const uploadDir = path.join(process.cwd(), "public", "uploads");
 
   // Ensure upload directory exists

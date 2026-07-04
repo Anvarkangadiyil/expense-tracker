@@ -7,6 +7,7 @@ import Income from "@/models/Income";
 import Client from "@/models/Client";
 import Project from "@/models/Project";
 import { incomeFormSchema, type IncomeFormValues } from "./schemas";
+import { serialize } from "@/lib/utils";
 
 async function getSessionUserOrThrow() {
   const session = await auth();
@@ -39,25 +40,27 @@ export async function getIncomes() {
 
     return {
       success: true,
-      data: incomes.map((income) => ({
-        ...income,
-        _id: (income._id as any).toString(),
-        clientId: income.clientId
-          ? {
-              _id: (income.clientId as any)._id.toString(),
-              name: (income.clientId as any).name,
-            }
-          : undefined,
-        projectId: income.projectId
-          ? {
-              _id: (income.projectId as any)._id.toString(),
-              name: (income.projectId as any).name,
-            }
-          : undefined,
-        date: income.date.toISOString().split("T")[0],
-        createdAt: income.createdAt?.toISOString(),
-        updatedAt: income.updatedAt?.toISOString(),
-      })),
+      data: serialize(
+        incomes.map((income) => ({
+          ...income,
+          _id: (income._id as any).toString(),
+          clientId: income.clientId
+            ? {
+                _id: (income.clientId as any)._id.toString(),
+                name: (income.clientId as any).name,
+              }
+            : undefined,
+          projectId: income.projectId
+            ? {
+                _id: (income.projectId as any)._id.toString(),
+                name: (income.projectId as any).name,
+              }
+            : undefined,
+          date: income.date.toISOString().split("T")[0],
+          createdAt: income.createdAt?.toISOString(),
+          updatedAt: income.updatedAt?.toISOString(),
+        }))
+      ),
     };
   } catch (error: unknown) {
     console.error("getIncomes error:", error);
@@ -103,10 +106,10 @@ export async function createIncome(values: IncomeFormValues) {
     revalidatePath("/");
     return {
       success: true,
-      data: {
+      data: serialize({
         ...newIncome.toObject(),
         _id: newIncome._id.toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("createIncome error:", error);
@@ -159,10 +162,10 @@ export async function updateIncome(id: string, values: IncomeFormValues) {
     revalidatePath("/");
     return {
       success: true,
-      data: {
+      data: serialize({
         ...updatedIncome,
         _id: (updatedIncome._id as any).toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("updateIncome error:", error);

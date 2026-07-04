@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import Client from "@/models/Client";
 import Project from "@/models/Project";
 import { clientFormSchema, type ClientFormValues } from "./schemas";
+import { serialize } from "@/lib/utils";
 
 /**
  * Checks if the user is authenticated and returns their userId.
@@ -36,12 +37,14 @@ export async function getClients() {
     // Serialize MongoDB objects for Client components (converting ObjectIds to string)
     return {
       success: true,
-      data: clients.map((client) => ({
-        ...client,
-        _id: (client._id as any).toString(),
-        createdAt: client.createdAt?.toISOString(),
-        updatedAt: client.updatedAt?.toISOString(),
-      })),
+      data: serialize(
+        clients.map((client) => ({
+          ...client,
+          _id: (client._id as any).toString(),
+          createdAt: client.createdAt?.toISOString(),
+          updatedAt: client.updatedAt?.toISOString(),
+        }))
+      ),
     };
   } catch (error: unknown) {
     console.error("getClients error:", error);
@@ -72,12 +75,12 @@ export async function getClientById(id: string) {
 
     return {
       success: true,
-      data: {
+      data: serialize({
         ...client,
         _id: (client._id as any).toString(),
         createdAt: client.createdAt?.toISOString(),
         updatedAt: client.updatedAt?.toISOString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("getClientById error:", error);
@@ -116,10 +119,10 @@ export async function createClient(values: ClientFormValues) {
     revalidatePath("/clients");
     return {
       success: true,
-      data: {
+      data: serialize({
         ...newClient.toObject(),
         _id: newClient._id.toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("createClient error:", error);
@@ -162,10 +165,10 @@ export async function updateClient(id: string, values: ClientFormValues) {
     revalidatePath(`/clients/${id}`);
     return {
       success: true,
-      data: {
+      data: serialize({
         ...updatedClient,
         _id: (updatedClient._id as any).toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("updateClient error:", error);

@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { registerSchema, RegisterInput, loginSchema, LoginInput } from "./schemas";
-import { signIn, auth } from "@/auth";
+import { signIn, auth, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
 
@@ -188,4 +188,11 @@ export async function deleteUserAccount() {
       error: error instanceof Error ? error.message : "Failed to delete account.",
     };
   }
+}
+
+/**
+ * Logs out the current user.
+ */
+export async function logoutUser() {
+  await signOut({ redirectTo: "/login" });
 }

@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import { MongoClient } from "mongodb"
 
 const MONGODB_URI = process.env.DATA_BASE_URL!
 
@@ -34,11 +35,19 @@ export async function connectDB() {
   try {
     cached.conn = await cached.promise
   } catch (error) {
-    // Reset cache on failure so future requests can retry cleanly.
     cached.promise = null
     cached.conn = null
     throw error
   }
 
   return cached.conn
+}
+
+let mongoClientCache: MongoClient | null = null
+
+export function getMongoClient(): MongoClient {
+  if (!mongoClientCache) {
+    mongoClientCache = new MongoClient(MONGODB_URI)
+  }
+  return mongoClientCache
 }

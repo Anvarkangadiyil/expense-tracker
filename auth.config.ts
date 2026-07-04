@@ -10,6 +10,7 @@ export const authConfig: NextAuthConfig = {
       const isAuthRoute =
         nextUrl.pathname === "/login" || nextUrl.pathname === "/register";
       const isPublicRoute =
+        nextUrl.pathname === "/" ||
         nextUrl.pathname.startsWith("/api/auth") ||
         nextUrl.pathname.startsWith("/invoices/shared/") ||
         nextUrl.pathname === "/favicon.ico" ||
@@ -19,12 +20,15 @@ export const authConfig: NextAuthConfig = {
         nextUrl.pathname.endsWith(".ico");
 
       if (isPublicRoute) {
+        if (nextUrl.pathname === "/" && isLoggedIn) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
         return true;
       }
 
       if (isAuthRoute) {
         if (isLoggedIn) {
-          return Response.redirect(new URL("/", nextUrl));
+          return Response.redirect(new URL("/dashboard", nextUrl));
         }
         return true;
       }

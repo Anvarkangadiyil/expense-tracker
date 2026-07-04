@@ -18,6 +18,7 @@ import Project from "@/models/Project";
 import Income from "@/models/Income";
 import { invoiceFormSchema, type InvoiceFormValues } from "./schemas";
 import { polishInvoiceLineItemDescription } from "@/services/openai";
+import { serialize } from "@/lib/utils";
 
 async function getSessionUserOrThrow() {
   const session = await auth();
@@ -50,31 +51,33 @@ export async function getInvoices() {
 
     return {
       success: true,
-      data: invoices.map((inv) => ({
-        ...inv,
-        _id: (inv._id as any).toString(),
-        clientId: inv.clientId
-          ? {
-              _id: (inv.clientId as any)._id.toString(),
-              name: (inv.clientId as any).name,
-              company: (inv.clientId as any).company,
-            }
-          : undefined,
-        projectId: inv.projectId
-          ? {
-              _id: (inv.projectId as any)._id.toString(),
-              name: (inv.projectId as any).name,
-            }
-          : undefined,
-        issueDate: inv.issueDate.toISOString().split("T")[0],
-        dueDate: inv.dueDate.toISOString().split("T")[0],
-        lineItems: inv.lineItems.map((item: any) => ({
-          ...item,
-          _id: item._id?.toString(),
-        })),
-        createdAt: inv.createdAt?.toISOString(),
-        updatedAt: inv.updatedAt?.toISOString(),
-      })),
+      data: serialize(
+        invoices.map((inv) => ({
+          ...inv,
+          _id: (inv._id as any).toString(),
+          clientId: inv.clientId
+            ? {
+                _id: (inv.clientId as any)._id.toString(),
+                name: (inv.clientId as any).name,
+                company: (inv.clientId as any).company,
+              }
+            : undefined,
+          projectId: inv.projectId
+            ? {
+                _id: (inv.projectId as any)._id.toString(),
+                name: (inv.projectId as any).name,
+              }
+            : undefined,
+          issueDate: inv.issueDate.toISOString().split("T")[0],
+          dueDate: inv.dueDate.toISOString().split("T")[0],
+          lineItems: inv.lineItems.map((item: any) => ({
+            ...item,
+            _id: item._id?.toString(),
+          })),
+          createdAt: inv.createdAt?.toISOString(),
+          updatedAt: inv.updatedAt?.toISOString(),
+        }))
+      ),
     };
   } catch (error: unknown) {
     console.error("getInvoices error:", error);
@@ -112,7 +115,7 @@ export async function getInvoiceById(id: string) {
 
     return {
       success: true,
-      data: {
+      data: serialize({
         ...inv,
         _id: (inv._id as any).toString(),
         clientId: inv.clientId
@@ -140,7 +143,7 @@ export async function getInvoiceById(id: string) {
         })),
         createdAt: inv.createdAt?.toISOString(),
         updatedAt: inv.updatedAt?.toISOString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("getInvoiceById error:", error);
@@ -180,7 +183,7 @@ export async function getSharedInvoiceById(id: string) {
 
     return {
       success: true,
-      data: {
+      data: serialize({
         ...inv,
         _id: (inv._id as any).toString(),
         clientId: inv.clientId
@@ -209,7 +212,7 @@ export async function getSharedInvoiceById(id: string) {
         createdAt: inv.createdAt?.toISOString(),
         updatedAt: inv.updatedAt?.toISOString(),
         currencySymbol,
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("getSharedInvoiceById error:", error);
@@ -265,10 +268,10 @@ export async function createInvoice(values: InvoiceFormValues) {
     revalidatePath("/invoices");
     return {
       success: true,
-      data: {
+      data: serialize({
         ...newInvoice.toObject(),
         _id: newInvoice._id.toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("createInvoice error:", error);
@@ -330,10 +333,10 @@ export async function updateInvoice(id: string, values: InvoiceFormValues) {
     revalidatePath(`/invoices/${id}`);
     return {
       success: true,
-      data: {
+      data: serialize({
         ...updated,
         _id: (updated._id as any).toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("updateInvoice error:", error);

@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
 import Client from "@/models/Client";
 import { projectFormSchema, type ProjectFormValues } from "./schemas";
+import { serialize } from "@/lib/utils";
 
 /**
  * Checks if the user is authenticated and returns their userId.
@@ -35,13 +36,15 @@ export async function getProjects() {
 
     return {
       success: true,
-      data: projects.map((project) => ({
-        ...project,
-        _id: (project._id as any).toString(),
-        clientId: (project.clientId as any).toString(),
-        createdAt: project.createdAt?.toISOString(),
-        updatedAt: project.updatedAt?.toISOString(),
-      })),
+      data: serialize(
+        projects.map((project) => ({
+          ...project,
+          _id: (project._id as any).toString(),
+          clientId: (project.clientId as any).toString(),
+          createdAt: project.createdAt?.toISOString(),
+          updatedAt: project.updatedAt?.toISOString(),
+        }))
+      ),
     };
   } catch (error: unknown) {
     console.error("getProjects error:", error);
@@ -70,13 +73,15 @@ export async function getProjectsByClientId(clientId: string) {
 
     return {
       success: true,
-      data: projects.map((project) => ({
-        ...project,
-        _id: (project._id as any).toString(),
-        clientId: (project.clientId as any).toString(),
-        createdAt: project.createdAt?.toISOString(),
-        updatedAt: project.updatedAt?.toISOString(),
-      })),
+      data: serialize(
+        projects.map((project) => ({
+          ...project,
+          _id: (project._id as any).toString(),
+          clientId: (project.clientId as any).toString(),
+          createdAt: project.createdAt?.toISOString(),
+          updatedAt: project.updatedAt?.toISOString(),
+        }))
+      ),
     };
   } catch (error: unknown) {
     console.error("getProjectsByClientId error:", error);
@@ -127,11 +132,11 @@ export async function createProject(values: ProjectFormValues) {
     revalidatePath(`/clients/${validated.data.clientId}`);
     return {
       success: true,
-      data: {
+      data: serialize({
         ...newProject.toObject(),
         _id: newProject._id.toString(),
         clientId: newProject.clientId.toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("createProject error:", error);
@@ -174,11 +179,11 @@ export async function updateProject(id: string, values: ProjectFormValues) {
     revalidatePath(`/clients/${validated.data.clientId}`);
     return {
       success: true,
-      data: {
+      data: serialize({
         ...updatedProject,
         _id: (updatedProject._id as any).toString(),
         clientId: (updatedProject.clientId as any).toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("updateProject error:", error);

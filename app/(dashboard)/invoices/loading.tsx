@@ -1,25 +1,6 @@
 export default function InvoicesLoading() {
   return (
-    <div className="min-h-screen bg-canvas-soft flex flex-col">
-      {/* Header skeleton shell */}
-      <header className="sticky top-0 z-40 w-full border-b border-hairline bg-surface/80 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-6 h-full">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-canvas-soft animate-pulse" />
-              <div className="h-5 w-32 rounded bg-canvas-soft animate-pulse hidden sm:block" />
-            </div>
-            <div className="flex gap-4">
-              <div className="h-4 w-16 rounded bg-canvas-soft animate-pulse" />
-              <div className="h-4 w-16 rounded bg-canvas-soft animate-pulse" />
-              <div className="h-4 w-16 rounded bg-canvas-soft animate-pulse" />
-            </div>
-          </div>
-          <div className="h-8 w-20 rounded bg-canvas-soft animate-pulse" />
-        </div>
-      </header>
-
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="space-y-6">
         {/* Title skeleton */}
         <div className="flex justify-between items-center">
           <div className="space-y-2">
@@ -69,7 +50,6 @@ export default function InvoicesLoading() {
             </div>
           ))}
         </div>
-      </main>
     </div>
   );
 }

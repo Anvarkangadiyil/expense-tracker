@@ -10,6 +10,7 @@ import Project from "@/models/Project";
 import { uploadReceipt } from "@/services/cloudinary";
 import { suggestExpenseCategory } from "@/services/openai";
 import { expenseFormSchema, type ExpenseFormValues } from "./schemas";
+import { serialize } from "@/lib/utils";
 
 async function getSessionUserOrThrow() {
   const session = await auth();
@@ -42,25 +43,27 @@ export async function getExpenses() {
 
     return {
       success: true,
-      data: expenses.map((expense) => ({
-        ...expense,
-        _id: (expense._id as any).toString(),
-        clientId: expense.clientId
-          ? {
-              _id: (expense.clientId as any)._id.toString(),
-              name: (expense.clientId as any).name,
-            }
-          : undefined,
-        projectId: expense.projectId
-          ? {
-              _id: (expense.projectId as any)._id.toString(),
-              name: (expense.projectId as any).name,
-            }
-          : undefined,
-        date: expense.date.toISOString().split("T")[0],
-        createdAt: expense.createdAt?.toISOString(),
-        updatedAt: expense.updatedAt?.toISOString(),
-      })),
+      data: serialize(
+        expenses.map((expense) => ({
+          ...expense,
+          _id: (expense._id as any).toString(),
+          clientId: expense.clientId
+            ? {
+                _id: (expense.clientId as any)._id.toString(),
+                name: (expense.clientId as any).name,
+              }
+            : undefined,
+          projectId: expense.projectId
+            ? {
+                _id: (expense.projectId as any)._id.toString(),
+                name: (expense.projectId as any).name,
+              }
+            : undefined,
+          date: expense.date.toISOString().split("T")[0],
+          createdAt: expense.createdAt?.toISOString(),
+          updatedAt: expense.updatedAt?.toISOString(),
+        }))
+      ),
     };
   } catch (error: unknown) {
     console.error("getExpenses error:", error);
@@ -109,10 +112,10 @@ export async function createExpense(values: ExpenseFormValues) {
     revalidatePath("/");
     return {
       success: true,
-      data: {
+      data: serialize({
         ...newExpense.toObject(),
         _id: newExpense._id.toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("createExpense error:", error);
@@ -167,10 +170,10 @@ export async function updateExpense(id: string, values: ExpenseFormValues) {
     revalidatePath("/");
     return {
       success: true,
-      data: {
+      data: serialize({
         ...updatedExpense,
         _id: (updatedExpense._id as any).toString(),
-      },
+      }),
     };
   } catch (error: unknown) {
     console.error("updateExpense error:", error);
